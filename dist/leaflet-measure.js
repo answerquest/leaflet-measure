@@ -1614,6 +1614,9 @@ var convertFuncs = {
   },
   acres: function (a) {
     return units.sqMeters.toAcres(a);
+  },
+  hectares: function (a) {
+    return units.sqMeters.toHectares(a);
   }
 };
 
@@ -1809,6 +1812,9 @@ exports.sqMeters = {
   },
   toAcres: function (m) {
     return m * 0.000247105;
+  },
+  toHectares: function (m) { //added this to bring in Hectares measurement
+    return m * 0.0001;
   }
 };
 
@@ -5030,12 +5036,24 @@ var measure = function (latlngs) {
       }),
       miles: path.distance({
         units: 'miles'
+      }),
+      meters: path.distance({
+        units: 'meters'
+      }),
+      kilometers: path.distance({
+        units: 'kilometers'
       })
     },
     area: {
       acres: path.area({
         units: 'acres'
-      })
+      }),
+      sqmeters: path.area({
+        units: 'sqmeters'
+      }),      
+      hectares: path.area({
+        units: 'hectares'
+      })      
     }
   };
 };
@@ -5097,10 +5115,10 @@ var Symbology = require('./mapsymbology');
 
 
 var controlTemplate = _.template("<a class=\"<%= model.className %>-toggle js-toggle\" href=\"#\" title=\"Measure distances and areas\">Measure</a>\n<div class=\"<%= model.className %>-interaction js-interaction\">\n  <div class=\"js-startprompt startprompt\">\n    <h3>Measure Distances and Areas</h3>\n    <ul class=\"tasks\">\n      <a href=\"#\" class=\"js-start start\">Create a new measurement</a>\n    </ul>\n  </div>\n  <div class=\"js-measuringprompt\">\n    <h3>Measure Distances and Areas</h3>\n    <p class=\"js-starthelp\">Start creating a measurement by adding points to the map</h3>\n    <div class=\"js-results results\"></div>\n    <ul class=\"js-measuretasks tasks\">\n      <li><a href=\"#\" class=\"js-cancel cancel\">Cancel</a></li>\n      <li><a href=\"#\" class=\"js-finish finish\">Finish Measurement</a></li>\n    </ul>\n  </div>\n</div>");
-var resultsTemplate = _.template("<div class=\"group\">\n<p class=\"lastpoint heading\">Last Point</p>\n<p><%= model.lastCoord.dms.y %> <span class=\"coorddivider\">/</span> <%= model.lastCoord.dms.x %></p>\n<p><%= humanize.numberFormat(model.lastCoord.dd.y, 6) %> <span class=\"coorddivider\">/</span> <%= humanize.numberFormat(model.lastCoord.dd.x, 6) %></p>\n</div>\n<% if (model.pointCount > 1) { %>\n<div class=\"group\">\n<p><span class=\"heading\">Path Distance</span> <%= humanize.numberFormat(model.length.feet, 0) %> Feet (<%= humanize.numberFormat(model.length.miles, 2) %> Miles)</p>\n</div>\n<% } %>\n<% if (model.pointCount > 2) { %>\n<div class=\"group\">\n<p><span class=\"heading\">Area</span> <%= humanize.numberFormat(model.area.acres, 2) %> Acres</p>\n</div>\n<% } %>");
+var resultsTemplate = _.template("<div class=\"group\">\n<p class=\"lastpoint heading\">Last Point</p>\n<p><%= model.lastCoord.dms.y %> <span class=\"coorddivider\">/</span> <%= model.lastCoord.dms.x %></p>\n<p><%= humanize.numberFormat(model.lastCoord.dd.y, 6) %> <span class=\"coorddivider\">/</span> <%= humanize.numberFormat(model.lastCoord.dd.x, 6) %></p>\n</div>\n<% if (model.pointCount > 1) { %>\n<div class=\"group\">\n<p><span class=\"heading\">Path Distance</span> <%= humanize.numberFormat(model.length.meters, 0) %> Meters (<%= humanize.numberFormat(model.length.kilometers, 2) %> Kilometers)</p>\n</div>\n<% } %>\n<% if (model.pointCount > 2) { %>\n<div class=\"group\">\n<p><span class=\"heading\">Area</span> <%= humanize.numberFormat(model.area.acres, 2) %> Acres (<%= humanize.numberFormat(model.area.hectares, 2) %> Hectares)</p>\n</div>\n<% } %>");
 var pointPopupTemplate = _.template("<h3>Point Location</h3>\n<p><%= model.lastCoord.dms.y %> <span class=\"coorddivider\">/</span> <%= model.lastCoord.dms.x %></p>\n<p><%= humanize.numberFormat(model.lastCoord.dd.y, 6) %> <span class=\"coorddivider\">/</span> <%= humanize.numberFormat(model.lastCoord.dd.x, 6) %></p>\n<ul class=\"tasks\">\n  <li><a href=\"#\" class=\"js-zoomto zoomto\">Center on this Location</a></li>\n  <li><a href=\"#\" class=\"js-deletemarkup deletemarkup\">Delete</a></li>\n</ul>");
-var linePopupTemplate = _.template("<h3>Linear Measurement</h3>\n<p><%= humanize.numberFormat(model.length.feet, 0) %> Feet</p>\n<p><%= humanize.numberFormat(model.length.miles, 2) %> Miles</p>\n<ul class=\"tasks\">\n  <li><a href=\"#\" class=\"js-zoomto zoomto\">Center on this Line</a></li>\n  <li><a href=\"#\" class=\"js-deletemarkup deletemarkup\">Delete</a></li>\n</ul>");
-var areaPopupTemplate = _.template("<h3>Area Measurement</h3>\n<p><%= humanize.numberFormat(model.area.acres, 2) %> Acres</p>\n<p><%= humanize.numberFormat(model.length.feet, 0) %> Feet (<%= humanize.numberFormat(model.length.miles, 2) %> Miles) Perimeter</p>\n<ul class=\"tasks\">\n  <li><a href=\"#\" class=\"js-zoomto zoomto\">Center on this Area</a></li>\n  <li><a href=\"#\" class=\"js-deletemarkup deletemarkup\">Delete</a></li>\n</ul>");
+var linePopupTemplate = _.template("<h3>Linear Measurement</h3>\n<p><%= humanize.numberFormat(model.length.meters, 0) %> Meters</p>\n<p><%= humanize.numberFormat(model.length.kilometers, 2) %> Kilometers</p>\n<ul class=\"tasks\">\n  <li><a href=\"#\" class=\"js-zoomto zoomto\">Center on this Line</a></li>\n  <li><a href=\"#\" class=\"js-deletemarkup deletemarkup\">Delete</a></li>\n</ul>");
+var areaPopupTemplate = _.template("<h3>Area Measurement</h3>\n<p><%= humanize.numberFormat(model.area.acres, 2) %> Acres (<%= humanize.numberFormat(model.area.hectares, 2) %> Hectares)</p>\n<p><%= humanize.numberFormat(model.length.meters, 0) %> meters (<%= humanize.numberFormat(model.length.kilometers, 2) %> Kilometers) Perimeter</p>\n<ul class=\"tasks\">\n  <li><a href=\"#\" class=\"js-zoomto zoomto\">Center on this Area</a></li>\n  <li><a href=\"#\" class=\"js-deletemarkup deletemarkup\">Delete</a></li>\n</ul>");
 
 L.Control.Measure = L.Control.extend({
   _className: 'leaflet-control-measure',
